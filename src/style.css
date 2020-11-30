@@ -197,3 +197,7 @@ input[type=radio] {
   display: none;
 }
 
+.video {
+  display: block;
+  margin: auto;
+}
