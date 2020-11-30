@@ -2,6 +2,8 @@
 
 Uses [OPZjs](github.com/nbw/opz) to parse input from the OP-Z.
 
+![banner](/src/img/banner.png)
+
 ## Note
 
 I wrote this project entirely in Javascript with on frameworks. I'm not expecting to win any medals
