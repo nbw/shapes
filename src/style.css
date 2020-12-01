@@ -211,6 +211,7 @@ input[type=radio] {
     max-width: 400px;
     max-height: 215px;
   }
+
   #menu {
     width: calc(100% - 2rem);
     padding: 4rem 1rem;
@@ -220,7 +221,7 @@ input[type=radio] {
     max-width: calc(100% - 2rem);
   }
 
-  .desktop, .tab button.desktop, hr {
+  .desktop, hr {
     display: none;
   }
 
