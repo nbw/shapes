@@ -208,7 +208,7 @@ input[type=radio] {
 
 @media screen and (max-width: 600px) {
   iframe {
-    max-width: 200px;
+    max-width: 400px;
     max-height: 215px;
   }
   #menu {
