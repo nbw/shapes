@@ -51,10 +51,10 @@
         <button class="mobile">
           Desktop only
         </button>
-        <button id="midi-connect" class="desktop">
+        <button id="opz-connect" data-type="opz" class="desktop">
           Connect
         </button>
-        <p id="midi-connect-error"></p>
+        <p id="opz-connect-error" class="error"></p>
         <hr/>
         <h2>Controls</h2>
         <h3>Settings</h3>
@@ -87,6 +87,22 @@
         <p style="text-align: center">
           gl hf
         </p>
+        <hr/>
+        <button id="midi-setup" class="desktop">
+          Midi CC Setup
+        </button>
+      </div>
+      <div id="midi-setup-menu" class="content hide">
+        <h1>Shapes OPZ</h1>
+        <hr/>
+        <h2>Midi Support</h2>
+        <p>
+          Shapes can alternatively accept MIDI CC values.
+        </p>
+        <button id="midi-connect" data-type="midi" class="desktop">
+          CONNECT
+        </button>
+        <p id="midi-connect-error" class="error"></p>
       </div>
     </div>
     <div id="settings" class="active desktop">
