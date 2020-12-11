@@ -188,7 +188,7 @@ input[type=radio] {
   max-width: 900px;
 }
 
-#midi-connect-error {
+.error {
   text-align: center;
   color: #f5502f;
 }

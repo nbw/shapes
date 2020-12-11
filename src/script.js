@@ -66,6 +66,12 @@ var _opzjs = _interopRequireDefault(require("opzjs"));
 
 var _settings = _interopRequireDefault(require("./settings"));
 
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 var settings = window.settings = new _settings.default();
 settings.buildSettings();
 var circles = [];
@@ -80,52 +86,57 @@ var ctxS = scratch.getContext('2d'); // Scratch
 var setupCanvas = function setupCanvas(c) {
   c.width = window.innerWidth;
   c.height = window.innerHeight;
+}; // Add a new shape to the canvas
+//
+// @param track [String || Integer]
+
+
+var addNewShape = function addNewShape(track) {
+  var coordinates = PATTERNS[settings.pattern];
+  var height = window.innerHeight;
+  var width = window.innerWidth;
+  var color = settings.getColor(track);
+  var shape; // Get coordinates for corresponding track
+
+  var c = coordinates[settings.getId(track)];
+  var c_x = c.x;
+  var c_y = c.y; // Octogon requires special handling since
+  // height and width are not guaranteed to be the same
+
+  if (settings.pattern === "octogon") {
+    var min = Math.min(height, width);
+    c_x = min / width * c_x + 0.5;
+    c_y = min / height * c_y + 0.5;
+  }
+
+  switch (settings.getShape(track)) {
+    case "circle":
+      shape = new _circle.default(width * c_x, height * c_y, 1, color);
+      break;
+
+    case "square":
+      shape = new _square.default(width * c_x, height * c_y, 1, color);
+      break;
+
+    case "triangle":
+      shape = new _triangle.default(width * c_x, height * c_y, 1, color);
+      break;
+  }
+
+  shapes.push(shape);
 };
 
-var midiHandler = function midiHandler(event) {
+var opzMidiHandler = function opzMidiHandler(event) {
   var data = _opzjs.default.decode(event.data);
 
   if (data.velocity > 0 && data.action === "keys") {
     var track = data.track; // Return if an unsupported track (fx, tape, etc)
 
     if (!settings.getId(track)) return;
-    var coordinates = PATTERNS[settings.pattern];
-    var height = window.innerHeight;
-    var width = window.innerWidth;
-    var color = settings.getColor(track);
-    var shape; // Get coording for track
-
-    var c = coordinates[settings.getId(track)];
-    var c_x = c.x;
-    var c_y = c.y; // Octogon requires special handling since
-    // height and width are not guaranteed to be the same
-
-    if (settings.pattern === "octogon") {
-      var min = Math.min(height, width);
-      c_x = min / width * c_x + 0.5;
-      c_y = min / height * c_y + 0.5;
-    }
-
-    switch (settings.getShape(track)) {
-      case "circle":
-        shape = new _circle.default(width * c_x, height * c_y, 1, color);
-        break;
-
-      case "square":
-        shape = new _square.default(width * c_x, height * c_y, 1, color);
-        break;
-
-      case "triangle":
-        shape = new _triangle.default(width * c_x, height * c_y, 1, color);
-        break;
-    }
-
-    shapes.push(shape);
+    addNewShape(track);
   }
 
   if (data.action === "dial" && data.track === "motion") {
-    console.log(data);
-
     switch (data.value.dialColor) {
       case "green":
         // 0 - 15
@@ -148,6 +159,9 @@ var midiHandler = function midiHandler(event) {
         break;
     }
   }
+};
+
+var midiHandler = function midiHandler(event) {// TODO
 };
 
 var drawCircle = function drawCircle(ctx, c) {
@@ -226,21 +240,46 @@ var draw = function draw() {
 
 window.webkitRequestAnimationFrame(draw); // Midi connect handler
 
-document.getElementById("midi-connect").addEventListener("click", function (e) {
+var midiConnect = function midiConnect(e) {
   midi.setup();
   setTimeout(function () {
+    var type = e.target.getAttribute("data-type");
+
     if (midi.devices.length > 0) {
       for (var deviceId in midi.devices) {
-        midi.selectDevice(deviceId, midiHandler);
+        var handler = type === "midi" ? midiHandler : opzMidiHandler;
+        midi.selectDevice(deviceId, handler);
       }
 
       var menu = document.getElementById("menu");
       menu.classList.add("hide");
     } else {
-      var error = document.getElementById("midi-connect-error");
+      var error = document.getElementById("".concat(type, "-connect-error"));
       error.innerHTML = "Couldn't detect any midi devices (check browser support)";
     }
   }, 200);
+};
+
+document.getElementById("opz-connect").addEventListener("click", midiConnect);
+document.getElementById("midi-connect").addEventListener("click", midiConnect);
+document.getElementById("midi-setup").addEventListener("click", function (e) {
+  var menu = document.getElementById("menu");
+
+  var _iterator = _createForOfIteratorHelper(menu.children),
+      _step;
+
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var node = _step.value;
+      node.classList.add("hide");
+    }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+
+  document.getElementById("midi-setup-menu").classList.remove("hide");
 });
 
 },{"./circle":1,"./midi":3,"./patterns":4,"./settings":5,"./square":6,"./triangle":7,"@babel/runtime/helpers/interopRequireDefault":11,"@babel/runtime/helpers/interopRequireWildcard":12,"opzjs":14}],3:[function(require,module,exports){
@@ -471,11 +510,21 @@ var Settings = /*#__PURE__*/function () {
       }
 
       return tracks;
+    } // Handles Int OR string input
+
+  }, {
+    key: "getTrack",
+    value: function getTrack(track) {
+      if (Number.isInteger(track)) {
+        return TRACKS[track % (TRACKS.length - 1)];
+      } else {
+        return track;
+      }
     }
   }, {
     key: "getId",
     value: function getId(track) {
-      var setting = this.trackSettings[track];
+      var setting = this.trackSettings[this.getTrack(track)];
 
       if (setting) {
         return setting["id"];
@@ -486,12 +535,12 @@ var Settings = /*#__PURE__*/function () {
   }, {
     key: "getShape",
     value: function getShape(track) {
-      return this.trackSettings[track]["shape"];
+      return this.trackSettings[this.getTrack(track)]["shape"];
     }
   }, {
     key: "getColor",
     value: function getColor(track) {
-      return this.trackSettings[track]["color"];
+      return this.trackSettings[this.getTrack(track)]["color"];
     }
   }, {
     key: "setOpacityRate",
